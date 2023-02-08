@@ -4,7 +4,10 @@ pub inline fn readFile(allocator: std.mem.Allocator, file_name: []const u8) ![]u
 }
 
 pub inline fn readFileToLines(allocator: std.mem.Allocator, file_name: []const u8, array: *std.ArrayList([]const u8)) anyerror!void {
-    const file = try std.fs.cwd().openFile(file_name, .{});
+    const file = std.fs.cwd().openFile(file_name, .{}) catch |err| {
+        try std.io.getStdErr().writer().print("`{s}`: file not found\n", .{file_name});
+        return err;
+    };
     while (file.reader().readUntilDelimiterOrEofAlloc(allocator, '\n', std.math.maxInt(usize))) |line| {
         if (line) |value| {
             try array.append(value);
